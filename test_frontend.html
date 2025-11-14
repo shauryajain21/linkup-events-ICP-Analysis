@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend Test</title>
+    <script>
+        async function testButton() {
+            const startTime = Date.now();
+            console.log('Testing button click simulation...');
+
+            try {
+                const response = await fetch('http://localhost:5002/api/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        event_url: 'https://cerebralvalley.com/who-attends',
+                        company_url: 'https://linkup.so',
+                        company_name: 'Linkup'
+                    }),
+                    signal: AbortSignal.timeout(180000) // 3 minute timeout
+                });
+
+                const data = await response.json();
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+                console.log(`✅ SUCCESS in ${elapsed}s`);
+                console.log('Response status:', response.status);
+                console.log('Summary:', data.step4_matches?.summary);
+
+                document.getElementById('result').innerHTML = `
+                    <h2>✅ Test Passed!</h2>
+                    <p>Time taken: ${elapsed} seconds</p>
+                    <p>Status: ${response.status}</p>
+                    <p>Attendees analyzed: ${data.step4_matches?.summary?.total_attendees_analyzed || 0}</p>
+                `;
+            } catch (error) {
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                console.error('❌ ERROR after', elapsed, 's:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2>❌ Test Failed</h2>
+                    <p>Error: ${error.message}</p>
+                    <p>Time: ${elapsed}s</p>
+                `;
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Frontend Button Test</h1>
+    <button onclick="testButton()" style="padding: 10px 20px; font-size: 16px;">
+        Test API Call
+    </button>
+    <div id="result" style="margin-top: 20px; padding: 20px; border: 1px solid #ccc;"></div>
+</body>
+</html>

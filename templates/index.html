@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event ICP Matcher - Powered by Linkup</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Crimson+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M12 12L22 7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M12 12V22" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        <path d="M12 12L2 7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    </svg>
+                    <span>Event ICP Matcher</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#how-it-works">How it Works</a>
+                    <a href="https://linkup.so" target="_blank" class="powered-by">Powered by Linkup</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="announcement">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 1L10.5 6L16 7L12 11L13 16L8 13.5L3 16L4 11L0 7L5.5 6L8 1Z" fill="currentColor"/>
+                </svg>
+                <span>Find your ideal customers at events</span>
+            </div>
+
+            <h1 class="hero-title">
+                Discover who's attending,<br>
+                <span class="hero-title-accent">match against your ICP</span>
+            </h1>
+
+            <p class="hero-subtitle">
+                Use AI-powered search to find event attendees and automatically<br>
+                analyze if they match your Ideal Customer Profile.
+            </p>
+
+            <div class="cta-buttons">
+                <button class="btn btn-primary" onclick="scrollToForm()">
+                    Get Started For Free
+                </button>
+                <a href="#how-it-works" class="btn btn-secondary">
+                    How It Works
+                </a>
+            </div>
+
+            <div class="trust-section">
+                <p class="trust-text">Powered by Linkup</p>
+                <div class="tech-badges">
+                    <div class="tech-badge" style="padding: 12px 24px;">
+                        <img src="https://framerusercontent.com/images/7zeIm6t3f1HaSltkw8upEvsD80.png?scale-down-to=1024" alt="Linkup" style="height: 32px; width: auto;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Form Section -->
+    <section class="form-section" id="form-section">
+        <div class="container">
+            <div class="form-container">
+                <div class="form-header">
+                    <h2>Analyze Event Attendees</h2>
+                    <p>Enter event details to discover and analyze potential customers</p>
+                </div>
+
+                <form id="analysis-form">
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label for="event-url">Event URL *</label>
+                            <input
+                                type="url"
+                                id="event-url"
+                                name="event_url"
+                                placeholder="https://cerebralvalley.com/who-attends"
+                                required
+                            >
+                            <small>The URL of the event page with attendee information</small>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="company-url">Your Company Website *</label>
+                            <input
+                                type="url"
+                                id="company-url"
+                                name="company_url"
+                                placeholder="https://linkup.so"
+                                required
+                            >
+                            <small>Your company's website URL for ICP analysis</small>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label for="company-name">Your Company Name</label>
+                            <input
+                                type="text"
+                                id="company-name"
+                                name="company_name"
+                                value="Linkup"
+                                placeholder="Linkup"
+                            >
+                            <small>Optional - helps with better context in the analysis</small>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <span class="btn-text">Analyze Event</span>
+                            <span class="btn-loading">
+                                <svg class="spinner" width="20" height="20" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" fill="none" opacity="0.25"/>
+                                    <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/>
+                                </svg>
+                                Analyzing...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+
+                <div class="form-info">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                        <path d="M12 16V12M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>Analysis typically takes 20-40 seconds depending on event size</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section" id="results-section" style="display: none;">
+        <div class="container">
+            <div class="results-container">
+                <!-- Results will be dynamically inserted here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2>How It Works</h2>
+                <p>Four intelligent steps to find your ideal customers at events</p>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <div class="step-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Extract Attendees</h3>
+                    <p>Linkup AI visits the event page and extracts all attendees with their names, roles, and company affiliations.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <div class="step-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3>Enrich Companies</h3>
+                    <p>Researches each attendee's company to understand their business, industry, and what they do.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <div class="step-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Analyze Your ICP</h3>
+                    <p>Studies your company website to understand your target customers, ideal buyer personas, and use cases.</p>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <div class="step-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3>Match & Prioritize</h3>
+                    <p>AI matches each attendee against your ICP with scores, priority levels, and personalized outreach recommendations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <div class="logo">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M12 12L22 7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M12 12V22" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M12 12L2 7" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Event ICP Matcher</span>
+                    </div>
+                    <p>Find your ideal customers at events with AI-powered search and analysis.</p>
+                </div>
+                <div class="footer-right">
+                    <div class="footer-links">
+                        <a href="https://linkup.so" target="_blank">Linkup</a>
+                        <a href="https://linkup.so/docs" target="_blank">Documentation</a>
+                        <a href="https://github.com" target="_blank">GitHub</a>
+                    </div>
+                    <p class="footer-credit">Built with Linkup Search API</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
