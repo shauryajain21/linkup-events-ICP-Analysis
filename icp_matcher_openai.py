@@ -273,41 +273,55 @@ Return your analysis as a structured JSON. CRITICAL: Include ALL attendees from 
 
 You MUST analyze every single person. Do not truncate or skip anyone."""
 
-        try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert sales and marketing analyst specializing in ICP analysis and lead qualification."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.7,
-                max_tokens=16000
-            )
+        # Retry logic for connection errors (common on serverless)
+        max_retries = 3
+        last_error = None
 
-            response_text = response.choices[0].message.content
-
+        for attempt in range(max_retries):
             try:
-                result = json.loads(response_text)
-            except json.JSONDecodeError:
-                result = {
-                    "error": "Failed to parse JSON response",
-                    "raw_response": response_text
-                }
+                response = self.client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are an expert sales and marketing analyst specializing in ICP analysis and lead qualification."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.7,
+                    max_tokens=16000,
+                    timeout=120  # 2 minute timeout per request
+                )
 
-            return result
+                response_text = response.choices[0].message.content
 
-        except Exception as e:
-            return {
-                "error": f"Failed to match companies to ICP: {str(e)}",
-                "details": str(e)
-            }
+                try:
+                    result = json.loads(response_text)
+                except json.JSONDecodeError:
+                    result = {
+                        "error": "Failed to parse JSON response",
+                        "raw_response": response_text
+                    }
+
+                return result
+
+            except Exception as e:
+                last_error = e
+                if attempt < max_retries - 1:
+                    import time
+                    time.sleep(2)  # Wait 2 seconds before retry
+                    continue
+                break
+
+        # If all retries failed, return error
+        return {
+            "error": f"Failed to match companies to ICP: {str(last_error)}",
+            "details": str(last_error)
+        }
 
     def quick_company_icp_analysis(
         self,
