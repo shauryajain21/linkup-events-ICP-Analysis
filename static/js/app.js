@@ -37,9 +37,9 @@ document.getElementById('analysis-form').addEventListener('submit', async functi
         formInfo.style.fontWeight = '600';
         formInfo.style.color = 'var(--color-primary)';
 
-        // Make API request with extended timeout (3 minutes)
+        // Make API request with extended timeout (10 minutes for large events)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 180000);
+        const timeoutId = setTimeout(() => controller.abort(), 600000);
 
         const response = await fetch('/api/analyze', {
             method: 'POST',
@@ -73,7 +73,7 @@ document.getElementById('analysis-form').addEventListener('submit', async functi
         // Show user-friendly error message
         let errorMessage = 'Analysis failed. Please try again.';
         if (error.name === 'AbortError') {
-            errorMessage = 'Request timed out after 3 minutes. The event may be too large or the servers may be busy. Please try again.';
+            errorMessage = 'Request timed out after 10 minutes. The event may be too large or the servers may be busy. Please try again.';
         } else if (error.message) {
             errorMessage = error.message;
         }
@@ -99,6 +99,13 @@ function displayResults(data) {
 
     const { metadata, step4_matches } = data;
     const { summary, attendees, overall_event_assessment, recommendations } = step4_matches;
+
+    // Handle both naming conventions from the API
+    const totalAnalyzed = summary.total_attendees_analyzed || attendees?.length || 0;
+    const highPriority = summary.high_priority_matches ?? summary.perfect_matches ?? 0;
+    const mediumPriority = summary.medium_priority_matches ?? summary.good_matches ?? 0;
+    const lowPriority = summary.low_priority_matches ?? summary.moderate_matches ?? 0;
+    const notAFit = summary.not_a_fit ?? summary.poor_matches ?? 0;
 
     // Build results HTML
     const resultsHTML = `
@@ -128,27 +135,27 @@ function displayResults(data) {
                         <path d="M23 21V19C22.9993 18.1137 22.7044 17.2528 22.1614 16.5523C21.6184 15.8519 20.8581 15.3516 20 15.13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                         <path d="M16 3.13C16.8604 3.35031 17.623 3.85071 18.1676 4.55232C18.7122 5.25392 19.0078 6.11683 19.0078 7.005C19.0078 7.89318 18.7122 8.75608 18.1676 9.45769C17.623 10.1593 16.8604 10.6597 16 10.88" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    ${summary.total_attendees_analyzed} attendees analyzed
+                    ${totalAnalyzed} attendees analyzed
                 </div>
             </div>
         </div>
 
         <div class="summary-grid">
             <div class="summary-card">
-                <div class="summary-card-value">${summary.high_priority_matches}</div>
-                <div class="summary-card-label">High Priority</div>
+                <div class="summary-card-value">${highPriority}</div>
+                <div class="summary-card-label">Perfect Match</div>
             </div>
             <div class="summary-card">
-                <div class="summary-card-value">${summary.medium_priority_matches}</div>
-                <div class="summary-card-label">Medium Priority</div>
+                <div class="summary-card-value">${mediumPriority}</div>
+                <div class="summary-card-label">Good Match</div>
             </div>
             <div class="summary-card">
-                <div class="summary-card-value">${summary.low_priority_matches}</div>
-                <div class="summary-card-label">Low Priority</div>
+                <div class="summary-card-value">${lowPriority}</div>
+                <div class="summary-card-label">Moderate</div>
             </div>
             <div class="summary-card">
-                <div class="summary-card-value">${summary.not_a_fit}</div>
-                <div class="summary-card-label">Not a Fit</div>
+                <div class="summary-card-value">${notAFit}</div>
+                <div class="summary-card-label">Poor Fit</div>
             </div>
         </div>
 
@@ -180,30 +187,50 @@ function displayResults(data) {
 
 // Render attendees list
 function renderAttendees(attendees) {
-    // Sort by ICP match score (highest first)
-    const sortedAttendees = [...attendees].sort((a, b) =>
-        (b.icp_match_score || 0) - (a.icp_match_score || 0)
-    );
+    // Sort by average of both scores (highest first)
+    const sortedAttendees = [...attendees].sort((a, b) => {
+        const avgA = ((a.icp_match_score || 0) + (a.business_value_score || 0)) / 2;
+        const avgB = ((b.icp_match_score || 0) + (b.business_value_score || 0)) / 2;
+        return avgB - avgA;
+    });
 
     return sortedAttendees.map(attendee => {
-        const priorityClass = attendee.opportunity_type.toLowerCase().replace(' ', '-');
-        const scoreClass = attendee.icp_match_score >= 7 ? 'high' :
-                          attendee.icp_match_score >= 5 ? 'medium' : 'low';
+        const icpScore = attendee.icp_match_score || 0;
+        const businessScore = attendee.business_value_score || 0;
+        const avgScore = (icpScore + businessScore) / 2;
+
+        // Determine score classes based on 0-100 scale
+        const icpScoreClass = icpScore >= 70 ? 'high' : icpScore >= 40 ? 'medium' : 'low';
+        const businessScoreClass = businessScore >= 70 ? 'high' : businessScore >= 40 ? 'medium' : 'low';
+        const overallClass = avgScore >= 70 ? 'high' : avgScore >= 40 ? 'medium' : 'low';
 
         return `
-            <div class="attendee-card">
+            <div class="attendee-card ${overallClass}-priority">
                 <div class="attendee-header">
                     <div class="attendee-info">
                         <h4>${attendee.name}</h4>
                         <div class="attendee-role">${attendee.role}</div>
                         <div class="attendee-company">${attendee.company}</div>
+                        ${attendee.company_description ? `<div class="attendee-company-desc">${attendee.company_description}</div>` : ''}
                     </div>
-                    <div class="score-badge ${scoreClass}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
-                        </svg>
-                        ${attendee.icp_match_score}/10
+                    <div class="score-badges">
+                        <div class="score-badge ${icpScoreClass}" title="ICP Match Score">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="currentColor"/>
+                            </svg>
+                            ICP: ${icpScore}
+                        </div>
+                        <div class="score-badge ${businessScoreClass}" title="Business Potential Score">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            Potential: ${businessScore}
+                        </div>
                     </div>
+                </div>
+
+                <div class="opportunity-badge ${attendee.opportunity_type?.toLowerCase() || 'moderate'}">
+                    ${attendee.opportunity_type || 'Moderate'}
                 </div>
 
                 <div class="attendee-details">

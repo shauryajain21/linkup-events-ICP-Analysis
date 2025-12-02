@@ -277,12 +277,78 @@ Return the enriched table in markdown format with all 4 columns. Focus on search
         """
         query = f"""You are an expert in B2B SaaS market analysis. Identify and describe the Ideal Customer Profile (ICP) for {company_name} (website: {company_url}). Focus your research on the company's homepage, product pages, and any case studies or customer testimonials available on the site. Analyze the target industries, company sizes, buyer personas, and typical use cases addressed by {company_name}. Present your findings in a concise bullet-point list, highlighting key characteristics and patterns."""
 
-        # Don't restrict domains - let Linkup search broadly
+        # Use standard depth for faster response (deep takes 30-60s)
+        return self.search(
+            query=query,
+            depth="standard",
+            output_type="sourcedAnswer",
+            include_inline_citations=True
+        )
+
+    def extract_speakers_structured(self, event_url: str) -> Dict[str, Any]:
+        """
+        Extract speakers from an event URL using structured output.
+
+        Args:
+            event_url: URL of the event page to extract speakers from.
+
+        Returns:
+            Dictionary containing structured speaker data.
+        """
+        query = f"""You are an expert data extraction assistant. Visit the event page at {event_url}.
+Identify and extract a complete list of all featured speakers, panelists, hosts, and presenters.
+For each person, extract their full name, job title/role, and company/organization.
+Look for speaker sections, agenda items with speaker names, host information, and any bio cards.
+Extract EVERYONE listed as a speaker, host, or presenter on the page."""
+
+        schema = {
+            "type": "object",
+            "properties": {
+                "speakers": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "title": {"type": "string"},
+                            "company": {"type": "string"},
+                            "profile_image_url": {"type": "string"},
+                            "bio": {"type": "string"}
+                        }
+                    }
+                }
+            }
+        }
+
         return self.search(
             query=query,
             depth="deep",
-            output_type="sourcedAnswer",
-            include_inline_citations=True
+            output_type="structured",
+            structured_output_schema=schema,
+            include_images=False,
+            include_sources=False
+        )
+
+    def enrich_speaker_profile(self, name: str, title: str, company: str) -> Dict[str, Any]:
+        """
+        Enrich a speaker's profile with LinkedIn and company information.
+
+        Args:
+            name: Speaker's full name.
+            title: Speaker's job title.
+            company: Speaker's company name.
+
+        Returns:
+            Dictionary containing search results with LinkedIn and company info.
+        """
+        query = f"""Find the LinkedIn profile of {name} who works at {company} as {title}.
+Get their professional background and experience. Also find information about {company}
+including company overview, products/services, and what they do."""
+
+        return self.search(
+            query=query,
+            depth="standard",
+            output_type="searchResults"
         )
 
     def get_company_info(

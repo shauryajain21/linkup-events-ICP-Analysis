@@ -523,14 +523,27 @@ body {
     color: var(--color-text-light);
 }
 
+/* Score Badges Container */
+.score-badges {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
 .score-badge {
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--radius-md);
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
     font-weight: 600;
+    font-size: 0.8rem;
     white-space: nowrap;
+}
+
+.score-badge svg {
+    flex-shrink: 0;
 }
 
 .score-badge.high {
@@ -546,6 +559,59 @@ body {
 .score-badge.low {
     background-color: #F8D7DA;
     color: #721C24;
+}
+
+/* Opportunity Badge */
+.opportunity-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--spacing-md);
+}
+
+.opportunity-badge.perfect {
+    background-color: #155724;
+    color: white;
+}
+
+.opportunity-badge.good {
+    background-color: #D4EDDA;
+    color: #155724;
+}
+
+.opportunity-badge.moderate {
+    background-color: #FFF3CD;
+    color: #856404;
+}
+
+.opportunity-badge.poor {
+    background-color: #F8D7DA;
+    color: #721C24;
+}
+
+/* Attendee Card Priority Borders */
+.attendee-card.high-priority {
+    border-left: 4px solid #155724;
+}
+
+.attendee-card.medium-priority {
+    border-left: 4px solid #856404;
+}
+
+.attendee-card.low-priority {
+    border-left: 4px solid #721C24;
+}
+
+/* Company Description in Attendee Info */
+.attendee-company-desc {
+    font-size: 0.8rem;
+    color: var(--color-text-light);
+    margin-top: 4px;
+    font-style: italic;
 }
 
 .attendee-details {

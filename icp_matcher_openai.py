@@ -144,6 +144,23 @@ Be thorough, analytical, and business-focused. Base your assessment on factual i
                 "details": str(e)
             }
 
+    # Hardcoded Linkup ICP for faster results
+    LINKUP_ICP = """Linkup's Ideal Customer Profile:
+- Company Size: Startups to large enterprises needing scalable API solutions
+- Target Industries: AI apps, SaaS platforms, Business Intelligence, Fintech, Legal Tech, LLM developers
+- Buyer Roles: Product Directors, CPOs, COOs, AI/ML Engineers, CTOs, Technical Founders
+- Pain Points:
+  • Need fast, accurate web search for AI grounding and fact-checking
+  • Require real-time fact-based information for AI agents
+  • CRM enrichment with verified web data
+  • Secure, compliant enterprise API solutions
+- Primary Use Cases:
+  • Powering AI agents with reliable, up-to-date data
+  • Building chatbots and answer engines with sourced information
+  • Company enrichment for lead generation and sales intelligence
+  • Deep research, due diligence, and risk analysis
+- Value Proposition: Linkup provides a search API that delivers accurate, real-time web data optimized for AI applications"""
+
     def match_companies_to_icp(
         self,
         user_icp: str,
@@ -189,68 +206,76 @@ Be thorough, analytical, and business-focused. Base your assessment on factual i
                 ]
             }
 
+        # Use hardcoded ICP for Linkup, dynamic ICP for others
+        is_linkup = company_name.lower() in ["linkup", "linkup.so", "linkup api"]
+        icp_to_use = self.LINKUP_ICP if is_linkup else user_icp
+
         prompt = f"""You are an expert sales and marketing analyst. Your task is to analyze the attendees and their companies from an event and determine which ones are a good match for {company_name}'s Ideal Customer Profile (ICP).
 
 IMPORTANT: Only analyze people who are actually mentioned in the Event Attendees data below. Do NOT make up or hallucinate any attendees. If no attendees are listed, return an empty attendees array.
 
 ## {company_name}'s ICP:
-{user_icp}
+{icp_to_use}
 
 ## Event Attendees with Company Information:
 {enriched_attendees}
 
 ## Your Task:
-Analyze each attendee and their company to determine if they would be a good fit for {company_name}. For each person:
+Analyze EVERY attendee and their company. You MUST return an entry for EACH person in the attendees list above. For each person, generate:
 
-1. **Identify the person**: Name, role, company
-2. **ICP Match Score**: Rate from 1-10 (10 = perfect match)
-3. **Match Reasoning**: Why they are or aren't a good fit based on:
-   - Their company's industry and what they do
-   - Their company size (if inferable)
-   - Their role and decision-making authority
-   - How well their company aligns with {company_name}'s target ICP
-   - Pain points they might have that {company_name} solves
-4. **Opportunity Type**:
-   - "High Priority" - Perfect ICP match, should reach out immediately
-   - "Medium Priority" - Good potential, worth exploring
-   - "Low Priority" - Weak fit, low priority for outreach
-   - "Not a Fit" - Doesn't match ICP
-5. **Recommended Action**: Specific next steps (e.g., "Schedule demo call", "Send product overview", "Connect on LinkedIn", "Skip - not a fit")
-6. **Key Talking Points**: If it's a good match, what should you emphasize when reaching out?
+1. **ICP Match Score (0-100)**: How well the person matches {company_name}'s ICP defined above
+   - 86-100: Perfect ICP fit (matches target industries, roles, and pain points)
+   - 61-85: Good match (relevant role or company)
+   - 31-60: Moderate match (some relevance)
+   - 0-30: Poor match (not relevant to {company_name}'s target market)
+
+2. **Business Value Score (0-100)**: The potential business value
+   - 86-100: Exceptional (key decision makers, industry leaders)
+   - 61-85: High value (decision makers, influencers, partners)
+   - 31-60: Moderate (potential users/customers)
+   - 0-30: Low value
+
+3. **Match Reasoning**: 1-2 sentences explaining the score
+
+4. **Opportunity Type** (based on average of both scores):
+   - "Perfect" - Average 86-100
+   - "Good" - Average 61-85
+   - "Moderate" - Average 31-60
+   - "Poor" - Average 0-30
+
+5. **Recommended Action**: Brief next step
 
 ## Output Format:
-Return your analysis as a structured JSON with this exact schema:
+Return your analysis as a structured JSON. CRITICAL: Include ALL attendees from the input.
 
 {{
   "summary": {{
-    "total_attendees_analyzed": <number>,
-    "high_priority_matches": <number>,
-    "medium_priority_matches": <number>,
-    "low_priority_matches": <number>,
-    "not_a_fit": <number>
+    "total_attendees_analyzed": <number - MUST match number of input attendees>,
+    "perfect_matches": <number>,
+    "good_matches": <number>,
+    "moderate_matches": <number>,
+    "poor_matches": <number>
   }},
   "attendees": [
     {{
-      "name": "<person's name>",
-      "role": "<job title>",
-      "company": "<company name>",
-      "company_description": "<brief company description>",
-      "icp_match_score": <1-10>,
-      "match_reasoning": "<detailed explanation>",
-      "opportunity_type": "<High Priority|Medium Priority|Low Priority|Not a Fit>",
-      "recommended_action": "<specific next step>",
-      "key_talking_points": ["<point 1>", "<point 2>", "<point 3>"]
+      "name": "<name>",
+      "role": "<title>",
+      "company": "<company>",
+      "icp_match_score": <0-100>,
+      "business_value_score": <0-100>,
+      "match_reasoning": "<1-2 sentences>",
+      "opportunity_type": "<Perfect|Good|Moderate|Poor>",
+      "recommended_action": "<brief action>"
     }}
   ],
-  "overall_event_assessment": "<1-2 sentence summary of whether this event has good ICP matches>",
-  "recommendations": ["<overall recommendation 1>", "<overall recommendation 2>"]
+  "overall_event_assessment": "<1 sentence summary>"
 }}
 
-Be thorough, analytical, and business-focused. Base your assessment on the company information provided."""
+You MUST analyze every single person. Do not truncate or skip anyone."""
 
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "system",

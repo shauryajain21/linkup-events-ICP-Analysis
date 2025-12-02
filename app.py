@@ -27,6 +27,104 @@ except Exception as e:
     print(f"Warning: Could not initialize clients: {e}")
     print("Make sure API keys are set in .env file")
 
+# Hardcoded speakers for AI Summit NY to skip Linkup scraping
+AI_SUMMIT_NY_SPEAKERS = [
+    {"name": "Aarohi Tripathi", "title": "Senior Data Engineer", "company": "Technology in Healthcare Services"},
+    {"name": "Aaron Rajan", "title": "Chief Digital Information Officer & Global VP", "company": "Unilever"},
+    {"name": "Abhishek Sinha", "title": "Senior Director - Head of COE (AI & Visualization)", "company": "Sage Therapeutics"},
+    {"name": "Aditya Mulik", "title": "Software Engineer", "company": "Walmart Global Tech"},
+    {"name": "Adrian Crockett", "title": "General Partner & Head of EJ Labs", "company": "Edward Jones"},
+    {"name": "Aeshna Kapoor", "title": "Data Scientist", "company": "Technology in Financial Services"},
+    {"name": "Agus Sudjianto", "title": "Executive in Residence, Center for Trustworthy AI", "company": "University of North Carolina at Charlotte"},
+    {"name": "Alessio Alionço", "title": "CEO/Founder", "company": "Pipefy"},
+    {"name": "Alex Tsankov", "title": "MLOps Engineer", "company": "Bloomberg"},
+    {"name": "Alexandre Girault", "title": "Head of AI/Innovation & Head of Data North America", "company": "Lacoste"},
+    {"name": "Ali Mahmoud", "title": "Principal", "company": "Glasswing Ventures"},
+    {"name": "Aliza Carpio", "title": "Senior Director, Technical Product Management", "company": "JLL"},
+    {"name": "Amanda Martin", "title": "Senior Developer Advocate", "company": "Apollo GraphQL"},
+    {"name": "Amit Chita", "title": "Field CTO", "company": "Mend.io"},
+    {"name": "Amy Auton-Smith", "title": "NY Technology Investment Lead", "company": "British Consulate General NY"},
+    {"name": "Ananya Upadhyay", "title": "AI Developer", "company": "United Rentals, Inc."},
+    {"name": "Andrea Hippeau", "title": "Partner", "company": "Lerer Hippeau"},
+    {"name": "Andreas Welsch", "title": "Founder & Chief AI Strategist", "company": "Intelligence Briefing"},
+    {"name": "Andres Andreu", "title": "Chief Executive Officer", "company": "Constella Intelligence"},
+    {"name": "Andrew Bostjancic", "title": "Senior Business Development Manager", "company": "Taylor & Francis"},
+    {"name": "Andrew Culhane", "title": "Chief Commercial Officer", "company": "Torc Robotics"},
+    {"name": "Andy Maskin", "title": "Director, AI Creative Technology", "company": "Publicis Sapient"},
+    {"name": "Andy Pidcock", "title": "Head of Post-Production", "company": "Malka a part of Gen Digital"},
+    {"name": "Angella Tape", "title": "SVP Group Strategy Director", "company": "Havas"},
+    {"name": "Anne Josephine Flanagan", "title": "Co-Founder and CSO", "company": "Boyd Strategy Group"},
+    {"name": "Anne-Claire Baschet", "title": "Chief Data & AI Officer", "company": "Mirakl"},
+    {"name": "Anshu Sharma", "title": "Co-founder and CEO", "company": "Skyflow"},
+    {"name": "Anthony Scarola", "title": "CISO", "company": "Apple Bank"},
+    {"name": "Antonio Ortiz Barranon", "title": "Professor", "company": "Tecnologico de Monterrey"},
+    {"name": "Anuradha Maradapu", "title": "Manager, Data Governance Office", "company": "American Airlines"},
+    {"name": "Anusha Dandapani", "title": "Chief, AI Hub", "company": "United Nations International Computing Centre (UNICC)"},
+    {"name": "Apostol Vassilev", "title": "Research Team Supervisor", "company": "National Institute of Standards and Technology (NIST)"},
+    {"name": "Arjun Ramakrishnan", "title": "Principal Security Architect - AI Security", "company": "Mastercard"},
+    {"name": "Arpit Narain", "title": "Global Head of Financial Solutions", "company": "Mathworks"},
+    {"name": "Arthur O'Connor", "title": "Academic Director", "company": "CUNY"},
+    {"name": "Aruna Rawat", "title": "CISO", "company": "Pureinsurance- A Tokio Marine Company"},
+    {"name": "Arvind Balasundaram", "title": "Executive Director, Commercial Insights & Analytics", "company": "Regeneron Pharmaceuticals"},
+    {"name": "Asha Saxena", "title": "CEO & Founder", "company": "World Leaders in Data & AI (WLDA)"},
+    {"name": "Ashish Gupta", "title": "Senior Vice President and Head of Data & AI", "company": "Incedo"},
+    {"name": "Ashlyn Lackey", "title": "Director, Emerging Technology", "company": "Prudential"},
+    {"name": "Audi Rowe", "title": "Americas Consulting Transformation Leader", "company": "EY"},
+    {"name": "Axel Threlfall", "title": "Editor at Large", "company": "Reuters"},
+    {"name": "Aydin Mirzaee", "title": "CEO", "company": "Fellow.ai"},
+    {"name": "Barry McCardel", "title": "Founder and CEO", "company": "Hex"},
+    {"name": "Benjamin Kummer", "title": "Director of Clinical Informatics in Neurology", "company": "Icahn School of Medicine at Mount Sinai"},
+    {"name": "Benjamin Sherman", "title": "Security Expert", "company": "Fortinet"},
+    {"name": "Beth Porter", "title": "Head of Studio Operations", "company": "C10 Labs"},
+    {"name": "Beth Roth", "title": "Senior Manager, Product Design", "company": "Capital One"},
+    {"name": "Bhavesh Mehta", "title": "Senior Manager", "company": "Uber"},
+    {"name": "Bhumika Shah", "title": "Data Solution Engineer, PhD Scholar", "company": "University of the Cumberlands"},
+]
+
+# URL patterns that use hardcoded data
+HARDCODED_EVENT_URLS = {
+    "newyork.theaisummit.com": AI_SUMMIT_NY_SPEAKERS,
+    "theaisummit.com/conference-speakers": AI_SUMMIT_NY_SPEAKERS,
+}
+
+
+def convert_speakers_to_table(speakers: list) -> str:
+    """Convert enriched speakers list to markdown table for ICP matching."""
+    lines = ["| Name | Role/Title | Company | Background |"]
+    lines.append("|------|-----------|---------|------------|")
+
+    for s in speakers:
+        name = s.get("name", "N/A")
+        title = s.get("title", "N/A")
+        company = s.get("company", "N/A")
+
+        # Extract enrichment info from search results
+        enrichment_text = ""
+        enrichment_results = s.get("enrichment", [])
+        if enrichment_results:
+            # Combine snippets/content from search results
+            snippets = []
+            for result in enrichment_results[:3]:  # Take top 3 results
+                if isinstance(result, dict):
+                    snippet = result.get("content") or result.get("snippet") or result.get("description", "")
+                    if snippet:
+                        # Truncate long snippets
+                        snippet = snippet[:300] + "..." if len(snippet) > 300 else snippet
+                        snippets.append(snippet)
+            enrichment_text = " | ".join(snippets) if snippets else ""
+
+        # Also include bio if available from structured extraction
+        bio = s.get("bio", "")
+        if bio and not enrichment_text:
+            enrichment_text = bio[:300] + "..." if len(bio) > 300 else bio
+
+        # Clean up for markdown table (escape pipes)
+        enrichment_text = enrichment_text.replace("|", "-").replace("\n", " ")
+
+        lines.append(f"| {name} | {title} | {company} | {enrichment_text} |")
+
+    return "\n".join(lines)
+
 
 @app.route('/')
 def index():
@@ -65,50 +163,95 @@ def analyze_event():
         company_url = data['company_url']
         company_name = data.get('company_name', 'your company')
 
-        # USING MOCK DATA FOR DEMO - Cerebral Valley 2025 Speakers
-        print(f"Using MOCK enriched data for Cerebral Valley speakers...")
-
-        attendee_data = "Cerebral Valley 2025 Speakers and Discussion Leaders"
+        # Step 1: Extract speakers from event URL
+        # Check for hardcoded URLs first to skip Linkup API call
+        speakers = None
         attendee_sources = []
+        use_hardcoded = False
 
-        enriched_attendees = """| Name | Role/Title | Affiliation/Company | Company Description |
-|------|-----------|---------------------|---------------------|
-| Amjad Masad | Founder & CEO | Replit | AI-powered cloud development platform enabling users to build apps and websites through natural language. Replit Agent automates software development with millions of users worldwide. |
-| Mike Krieger | Chief Product Officer | Anthropic | AI safety and research company that develops Claude, a family of LLMs designed with safety, helpfulness, and honesty as core principles. Valued at $183B. |
-| Jimmy Ba | Co-founder | xAI | Elon Musk's AI company focused on developing advanced AI systems to understand the universe. Building Grok AI assistant. |
-| Guillermo Rauch | Founder & CEO | Vercel | Cloud platform for frontend developers, creator of Next.js. Provides edge network, serverless functions, and Git-integrated deployments for modern web apps. |
-| Winston Weinberg | Founder & CEO | Harvey | AI-powered legal platform built on GPT-4 for law firms and corporations. Valued at $3B with 235 clients across 42 countries. Helps with legal research, drafting, and diligence. |
-| Elad Gil | Founder | Gil & Co. | Venture capital investor and advisor to major tech companies including Airbnb, Coinbase, Stripe, Square, and others. |
-| Ilya Fushman | Partner | Kleiner Perkins | Leading venture capital firm that has invested in companies like Amazon, Google, and Genentech. Focus on enterprise, consumer, and healthcare tech. |
-| Andy Konwinski | Co-founder | Laude | AI-powered conversation intelligence platform for sales teams. Helps analyze and improve sales calls and meetings. |
-| Cristina Cordova | COO | Linear | Modern issue tracking and project management tool for software teams. Known for exceptional design and performance. Used by thousands of companies. |
-| Mati Staniszewski | Founder & CEO | ElevenLabs | Leading AI voice generation company with 5,000+ voices in 70+ languages. Creates lifelike speech for content creators, businesses, and developers. |
-| Tuhin Srivastava | Founder & CEO | Baseten | ML infrastructure platform that helps companies deploy and scale machine learning models in production. Serverless ML deployment. |
-| Eoghan McCabe | Founder & CEO | Intercom | Customer messaging platform with AI-powered chatbots and support tools. Serves 25,000+ businesses with conversational relationship platform. |
-| Christina Cacioppo | Founder & CEO | Vanta | Security compliance automation platform. Helps companies get SOC 2, ISO 27001, HIPAA, and other certifications. Over 8,000 customers. |
-| Aaron Levie | Founder & CEO | Box | Enterprise cloud content management and file sharing platform. Publicly traded (NYSE: BOX) with millions of users across 100,000+ organizations. |
-| Daniel Lurie | Mayor | City and County of San Francisco | Mayor of San Francisco, focused on technology, innovation, and civic improvement in the Bay Area. |
-| Parag Agrawal | Founder & CEO | Parallel Web Systems | Former Twitter CEO building AI-powered software development tools. Focused on parallel computing and distributed systems. |
-| Gabriel Hubert | Founder & CEO | Dust | AI assistant platform for teams. Helps companies build custom AI assistants that connect to their data and workflows. |
-| Anna Patterson | Founder & CEO | Ceramic.ai | AI-powered data management and knowledge graph platform. Former Google engineer who built key parts of search infrastructure. |
-| Kirsten Green | Founder & Managing Partner | Forerunner Ventures | Leading consumer-focused VC firm. Early investor in Warby Parker, Glossier, Jet.com, Dollar Shave Club, and Chime. |
-| Eleonore Crespo | Founder & CEO | Pigment | Business planning platform that helps CFOs and finance teams with forecasting, modeling, and strategic planning. Over 400 enterprise customers. |
-| Tudor Achim | Founder & CEO | Harmonic | AI-powered search and knowledge management platform for teams. Helps companies organize and find information across all their tools. |
-| Julie Bornstein | Founder & CEO | Daydream | AI-powered fashion and shopping platform. Former Stitch Fix COO and Nordstrom executive building personalized shopping experiences. |
-| Kevin Novak | Founder & Managing Partner | Rackhouse Venture Capital | Early-stage venture capital firm focused on B2B SaaS, infrastructure, and developer tools. |
-| Ophelia Brown | Managing Partner | Blossom Capital | European VC firm focused on B2B software. Invested in companies like UiPath, Contentful, and Ledger. |
-| Marc Boroditsky | CRO | Nebius | Cloud infrastructure company spun out of Yandex. Provides GPU cloud and AI infrastructure for model training and inference. |
-| Jai Das | Co-founder, President & Partner | Sapphire Ventures | Growth-stage venture capital firm with $10B+ under management. Invested in LinkedIn, Box, AppDynamics, and others. |
-| Astasia Myers | General Partner | Felicis | VC firm focused on early-stage startups. Portfolio includes Shopify, Canva, Notion, and Plaid. |
-| Stefan Weitz | Co-founder & CEO | HumanX | Event series and community focused on human-centered AI and technology. Brings together leaders in AI, policy, and business. |
-| Howie Xu | Chief AI & Innovation Officer | Gen | Digital safety company (formerly Norton and Avast). Building AI-powered cybersecurity and privacy tools for consumers. |
-| Sarah Wooders | Founder & CTO | Letta | AI memory management platform. Helps AI agents maintain context and memory across conversations. Built by former Berkeley AI researchers. |
-| Brooke Hopkins | Founder & CEO | Coval | AI evaluation and testing platform for LLM applications. Helps companies ensure their AI systems are reliable and safe before deployment. |
-| Ethan Lutske | Partner | Wilson Sonsini | Top Silicon Valley law firm specializing in technology, startups, and venture capital. Represented Google, Apple, Tesla in major transactions. |
-| Keith Figlioli | Managing Partner | LRVHealth | Healthcare-focused venture capital firm investing in digital health, healthcare services, and life sciences companies. |
-| Jake Saper | General Partner | Emergence Capital | Enterprise SaaS-focused VC firm. Early investors in Salesforce, Zoom, Box, and other major SaaS companies. |
-| Roy Bahat | Head | Bloomberg Beta | Venture capital arm of Bloomberg LP. Focuses on the future of work, machine intelligence, and data-driven companies. |
-"""
+        for url_pattern, hardcoded_speakers in HARDCODED_EVENT_URLS.items():
+            if url_pattern in event_url:
+                print(f"Step 1: Using hardcoded speakers for {url_pattern} (skipping Linkup)")
+                speakers = hardcoded_speakers
+                use_hardcoded = True
+                break
+
+        if not use_hardcoded:
+            # Use Linkup API to extract speakers
+            print(f"Step 1: Extracting speakers from {event_url}...")
+            try:
+                speakers_response = linkup_client.extract_speakers_structured(event_url)
+
+                # Handle structured output response - Linkup returns speakers directly at root level
+                # Try multiple possible response formats
+                if "speakers" in speakers_response:
+                    speakers = speakers_response.get("speakers", [])
+                elif "structuredOutput" in speakers_response:
+                    structured_output = speakers_response.get("structuredOutput", {})
+                    if isinstance(structured_output, str):
+                        import json as json_module
+                        try:
+                            structured_output = json_module.loads(structured_output)
+                        except:
+                            structured_output = {}
+                    speakers = structured_output.get("speakers", [])
+                elif "structured_output" in speakers_response:
+                    structured_output = speakers_response.get("structured_output", {})
+                    if isinstance(structured_output, str):
+                        import json as json_module
+                        try:
+                            structured_output = json_module.loads(structured_output)
+                        except:
+                            structured_output = {}
+                    speakers = structured_output.get("speakers", [])
+                else:
+                    speakers = []
+                attendee_sources = speakers_response.get("sources", [])
+            except Exception as e:
+                print(f"Error extracting speakers: {e}")
+                return jsonify({
+                    "error": f"Failed to extract speakers from event URL: {str(e)}"
+                }), 500
+
+        if not speakers:
+            return jsonify({
+                "error": "No speakers found on the event page. The page may be private, dynamically loaded, or not contain speaker information."
+            }), 400
+
+        # Limit speakers to prevent timeout
+        # Use higher limit for hardcoded events since no Linkup enrichment calls are needed
+        MAX_SPEAKERS_DYNAMIC = 15  # For dynamically scraped events (enrichment takes time)
+        MAX_SPEAKERS_HARDCODED = 50  # For hardcoded events (all 50 AI Summit speakers)
+        MAX_SPEAKERS = MAX_SPEAKERS_HARDCODED if use_hardcoded else MAX_SPEAKERS_DYNAMIC
+
+        total_found = len(speakers)
+        if len(speakers) > MAX_SPEAKERS:
+            print(f"Limiting from {len(speakers)} to {MAX_SPEAKERS} speakers to prevent timeout")
+            speakers = speakers[:MAX_SPEAKERS]
+
+        attendee_data = f"Extracted {total_found} speakers from {event_url}" + (f" (processing top {MAX_SPEAKERS})" if total_found > MAX_SPEAKERS else "")
+        print(f"Found {total_found} speakers, processing {len(speakers)}")
+
+        # Step 2: Enrich each speaker with LinkedIn + company info
+        # Skip enrichment for speed - use bio from structured extraction instead
+        print(f"Step 2: Processing {len(speakers)} speakers...")
+        enriched_speakers = []
+        for i, speaker in enumerate(speakers):
+            speaker_name = speaker.get("name", "Unknown")
+            speaker_title = speaker.get("title", "N/A")
+            speaker_company = speaker.get("company", "N/A")
+
+            print(f"  Processing {i+1}/{len(speakers)}: {speaker_name} at {speaker_company}")
+
+            # Use bio from structured extraction instead of making additional API calls
+            # This dramatically speeds up the workflow
+            enriched_speakers.append({
+                **speaker,
+                "enrichment": []  # Skip enrichment API calls for speed
+            })
+
+        # Convert enriched speakers to markdown table for ICP matcher
+        enriched_attendees = convert_speakers_to_table(enriched_speakers)
         enrichment_sources = []
 
         # Step 3: Get user company ICP from their website
