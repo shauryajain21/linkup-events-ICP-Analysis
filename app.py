@@ -219,9 +219,10 @@ def analyze_event():
             }), 400
 
         # Limit speakers to prevent timeout
-        # Use higher limit for hardcoded events since no Linkup enrichment calls are needed
-        MAX_SPEAKERS_DYNAMIC = 15  # For dynamically scraped events (enrichment takes time)
-        MAX_SPEAKERS_HARDCODED = 50  # For hardcoded events (all 50 AI Summit speakers)
+        # Vercel free tier has 10-second timeout, so we need to keep speaker count low
+        # Even Pro tier (300s) can struggle with too many speakers due to OpenAI API latency
+        MAX_SPEAKERS_DYNAMIC = 8  # For dynamically scraped events
+        MAX_SPEAKERS_HARDCODED = 10  # For hardcoded events (reduced for Vercel compatibility)
         MAX_SPEAKERS = MAX_SPEAKERS_HARDCODED if use_hardcoded else MAX_SPEAKERS_DYNAMIC
 
         total_found = len(speakers)

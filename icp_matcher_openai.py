@@ -292,9 +292,9 @@ You MUST analyze every single person. Do not truncate or skip anyone."""
                         }
                     ],
                     response_format={"type": "json_object"},
-                    temperature=0.7,
-                    max_tokens=16000,
-                    timeout=120  # 2 minute timeout per request
+                    temperature=0.5,  # Lower temp for faster, more deterministic responses
+                    max_tokens=4000,  # Reduced for faster response with fewer speakers
+                    timeout=30  # 30 second timeout for Vercel compatibility
                 )
 
                 response_text = response.choices[0].message.content
@@ -313,7 +313,7 @@ You MUST analyze every single person. Do not truncate or skip anyone."""
                 last_error = e
                 if attempt < max_retries - 1:
                     import time
-                    time.sleep(2)  # Wait 2 seconds before retry
+                    time.sleep(0.5)  # Quick retry for serverless
                     continue
                 break
 
